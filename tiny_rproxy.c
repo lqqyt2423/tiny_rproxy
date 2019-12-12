@@ -3,6 +3,7 @@
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/socket.h>
 #include "net_helper.h"
 #include "rio.h"
 #include "sbuf.h"
@@ -87,12 +88,15 @@ void proxy(int connfd) {
   while ((n = rio_read_one(connfd, buf, BUFSIZE)) > 0) {
     rio_writen(clientfd, buf, n);
   }
+  shutdown(connfd, SHUT_RD);
+  shutdown(clientfd, SHUT_WR);
 
   pthread_join(tid, NULL);
 
   close(connfd);
   close(clientfd);
   free((void *)pt);
+  printf("free connfd: %d, clientfd: %d\n", connfd, clientfd);
 }
 
 void *handle_client_conn(void *vargp) {
@@ -103,6 +107,8 @@ void *handle_client_conn(void *vargp) {
   while ((n = rio_read_one(pt->clientfd, buf, BUFSIZE)) > 0) {
     rio_writen(pt->connfd, buf, n);
   }
+  shutdown(pt->clientfd, SHUT_RD);
+  shutdown(pt->connfd, SHUT_WR);
 
   return NULL;
 }
