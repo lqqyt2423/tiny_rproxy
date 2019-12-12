@@ -9,6 +9,7 @@ typedef struct {
 } rio_t;
 
 // 无缓冲
+ssize_t rio_read_one(int fd, void *usrbuf, size_t n);
 ssize_t rio_readn(int fd, void *usrbuf, size_t n);
 ssize_t rio_writen(int fd, void *usrbuf, size_t n);
 

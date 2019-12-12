@@ -84,7 +84,7 @@ void proxy(int connfd) {
   pt->clientfd = clientfd;
   pthread_create(&tid, NULL, handle_client_conn, pt);
 
-  while ((n = rio_readn(connfd, buf, BUFSIZE)) > 0) {
+  while ((n = rio_read_one(connfd, buf, BUFSIZE)) > 0) {
     rio_writen(clientfd, buf, n);
   }
 
@@ -100,7 +100,7 @@ void *handle_client_conn(void *vargp) {
   int n;
   char buf[BUFSIZE];
 
-  while ((n = rio_readn(pt->clientfd, buf, BUFSIZE)) > 0) {
+  while ((n = rio_read_one(pt->clientfd, buf, BUFSIZE)) > 0) {
     rio_writen(pt->connfd, buf, n);
   }
 
