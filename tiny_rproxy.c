@@ -1,21 +1,29 @@
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include "net_helper.h"
 #include "rio.h"
 #include "sbuf.h"
+#include <stdlib.h>
 
 #define NTHREADS 4
 #define SBUFSIZE 16
 #define BUFSIZE 1024
 
-#define LISTEN_PORT "8000"
+#define LISTEN_PORT "5432"
 #define PROXY_HOSTNAME "localhost"
-#define PROXY_PORT "8001"
+#define PROXY_PORT "7000"
 
 void *handle_conn(void *vargp);
+void *handle_client_conn(void *vargp);
 void proxy(int);
 
 sbuf_t s_buf;
+
+typedef struct {
+  int connfd;
+  int clientfd;
+} proxy_t;
 
 int main(int argc, char **argv) {
   int listenfd, connfd;
@@ -43,6 +51,20 @@ void *handle_conn(void *vargp) {
     int connfd = sbuf_remove(&s_buf);
     proxy(connfd);
   }
+
+  return NULL;
+}
+
+void *handle_client_conn(void *vargp) {
+  proxy_t *pt = (proxy_t *)vargp;
+  int n;
+  char buf[BUFSIZE];
+
+  while ((n = rio_readn(pt->clientfd, buf, BUFSIZE)) > 0) {
+    rio_writen(pt->connfd, buf, n);
+  }
+
+  return NULL;
 }
 
 void proxy(int connfd) {
@@ -52,25 +74,22 @@ void proxy(int connfd) {
     return;
   }
 
-  rio_t up, down;
+  pthread_t tid;
   int up_n, down_n;
   char up_buf[BUFSIZE], down_buf[BUFSIZE];
-  rio_readinitb(&up, connfd);
-  rio_readinitb(&down, clientfd);
 
-  while (1) {
-    up_n = rio_readnb(&up, up_buf, BUFSIZE);
-    if (up_n > 0) {
-      rio_writen(clientfd, up_buf, up_n);
-    }
-    down_n = rio_readnb(&down, down_buf, BUFSIZE);
-    if (down_n > 0) {
-      rio_writen(connfd, down_buf, down_n);
-    }
-    if (up_n <= 0 && down_n <= 0) {
-      close(clientfd);
-      close(connfd);
-      return;
-    }
+  proxy_t *pt = (proxy_t *)malloc(sizeof(proxy_t));
+  pt->connfd = connfd;
+  pt->clientfd = clientfd;
+  pthread_create(&tid, NULL, handle_client_conn, pt);
+
+  while ((up_n = rio_readn(connfd, up_buf, BUFSIZE)) > 0) {
+    rio_writen(clientfd, down_buf, up_n);
   }
+
+  pthread_join(tid, NULL);
+
+  close(connfd);
+  close(clientfd);
+  free((void *)pt);
 }
