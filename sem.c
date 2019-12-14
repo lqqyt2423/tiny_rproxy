@@ -1,5 +1,4 @@
 #include "sem.h"
-#include <errno.h>
 
 void rk_sema_init(struct rk_sema *s, int value) {
 #ifdef __APPLE__

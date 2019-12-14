@@ -1,3 +1,8 @@
+#ifndef __SEM_H__
+#define __SEM_H__
+
+#include <errno.h>
+
 #ifdef __APPLE__
 #include <dispatch/dispatch.h>
 #else
@@ -15,3 +20,5 @@ struct rk_sema {
 void rk_sema_init(struct rk_sema *s, int value);
 void rk_sema_wait(struct rk_sema *s);
 void rk_sema_post(struct rk_sema *s);
+
+#endif

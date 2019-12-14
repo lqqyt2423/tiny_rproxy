@@ -1,17 +1,11 @@
-#include <netdb.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include "net_helper.h"
-#include "rio.h"
+#include "csapp.h"
+#include "helper.h"
 #include "sbuf.h"
 
 #define NTHREADS 4
 #define SBUFSIZE 16
 #define BUFSIZE 1024
-#define MAXSTR 100
+#define MAXSTR 1024
 
 #define LISTEN_PORT "5432"
 #define PROXY_HOSTNAME "localhost"
@@ -35,20 +29,19 @@ int main(int argc, char **argv) {
   struct sockaddr_storage clientaddr;
   char client_hostname[MAXSTR], client_port[MAXSTR];
 
-  listenfd = open_listenfd(LISTEN_PORT);
+  listenfd = Open_listenfd(LISTEN_PORT);
   printf("listend at %s listenfd: %d\n", LISTEN_PORT, listenfd);
 
   sbuf_init(&s_buf, SBUFSIZE);
 
   for (int i = 0; i < NTHREADS; i++) {
-    pthread_create(&tid, NULL, handle_conn, NULL);
+    Pthread_create(&tid, NULL, handle_conn, NULL);
   }
-  printf("created %d threads\n", NTHREADS);
 
   while (1) {
     clientlen = sizeof(struct sockaddr_storage);
-    connfd = accept(listenfd, (SA *)&clientaddr, &clientlen);
-    getnameinfo((SA *)&clientaddr, clientlen, client_hostname, MAXSTR,
+    connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
+    Getnameinfo((SA *)&clientaddr, clientlen, client_hostname, MAXSTR,
                 client_port, MAXSTR, 0);
     printf("accept %s:%s connfd: %d\n", client_hostname, client_port, connfd);
 
@@ -57,7 +50,7 @@ int main(int argc, char **argv) {
 }
 
 void *handle_conn(void *vargp) {
-  pthread_detach(pthread_self());
+  Pthread_detach(Pthread_self());
   while (1) {
     int connfd = sbuf_remove(&s_buf);
     printf("thread get connfd: %d\n", connfd);
@@ -69,44 +62,43 @@ void *handle_conn(void *vargp) {
 
 void proxy(int connfd) {
   int clientfd = open_clientfd(PROXY_HOSTNAME, PROXY_PORT);
-  if (clientfd == -1) {
-    fprintf(stderr, "server %s:%s error\n", PROXY_HOSTNAME, PROXY_PORT);
-    close(connfd);
+  if (clientfd < 0) {
+    print_unix_error("open_clientfd error");
+    Close(connfd);
     return;
   }
-  printf("open proxy %s:%s clientfd: %d\n", PROXY_HOSTNAME, PROXY_PORT,
-         clientfd);
 
   pthread_t tid;
   int n;
-  char buf[BUFSIZE];
+  char buf[MAXBUF];
 
-  proxy_t *pt = (proxy_t *)malloc(sizeof(proxy_t));
+  proxy_t *pt = (proxy_t *)Malloc(sizeof(proxy_t));
   pt->connfd = connfd;
   pt->clientfd = clientfd;
-  pthread_create(&tid, NULL, handle_client_conn, pt);
+  Pthread_create(&tid, NULL, handle_client_conn, pt);
 
-  while ((n = rio_read_one(connfd, buf, BUFSIZE)) > 0) {
-    rio_writen(clientfd, buf, n);
+  while ((n = Rio_read_one(connfd, buf, MAXBUF)) > 0) {
+    Rio_writen(clientfd, buf, n);
   }
+
   shutdown(connfd, SHUT_RD);
   shutdown(clientfd, SHUT_WR);
 
-  pthread_join(tid, NULL);
+  Pthread_join(tid, NULL);
 
-  close(connfd);
-  close(clientfd);
-  free((void *)pt);
+  Close(connfd);
+  Close(clientfd);
+  Free((void *)pt);
   printf("free connfd: %d, clientfd: %d\n", connfd, clientfd);
 }
 
 void *handle_client_conn(void *vargp) {
   proxy_t *pt = (proxy_t *)vargp;
   int n;
-  char buf[BUFSIZE];
+  char buf[MAXBUF];
 
-  while ((n = rio_read_one(pt->clientfd, buf, BUFSIZE)) > 0) {
-    rio_writen(pt->connfd, buf, n);
+  while ((n = Rio_read_one(pt->clientfd, buf, MAXBUF)) > 0) {
+    Rio_writen(pt->connfd, buf, n);
   }
   shutdown(pt->clientfd, SHUT_RD);
   shutdown(pt->connfd, SHUT_WR);
