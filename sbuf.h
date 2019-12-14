@@ -1,13 +1,14 @@
-#include <semaphore.h>
+#include "sem.h"
 
 typedef struct {
   int *buf;
   int n;
   int front;
   int rear;
-  sem_t mutex;
-  sem_t slots;
-  sem_t items;
+
+  struct rk_sema mutex;
+  struct rk_sema slots;
+  struct rk_sema items;
 } sbuf_t;
 
 void sbuf_init(sbuf_t *sp, int n);

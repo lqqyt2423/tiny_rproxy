@@ -42,8 +42,8 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < NTHREADS; i++) {
     pthread_create(&tid, NULL, handle_conn, NULL);
-    printf("create pthread: %d\n", i);
   }
+  printf("created %d threads\n", NTHREADS);
 
   while (1) {
     clientlen = sizeof(struct sockaddr_storage);
@@ -71,6 +71,7 @@ void proxy(int connfd) {
   int clientfd = open_clientfd(PROXY_HOSTNAME, PROXY_PORT);
   if (clientfd == -1) {
     fprintf(stderr, "server %s:%s error\n", PROXY_HOSTNAME, PROXY_PORT);
+    close(connfd);
     return;
   }
   printf("open proxy %s:%s clientfd: %d\n", PROXY_HOSTNAME, PROXY_PORT,
