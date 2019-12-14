@@ -12,6 +12,6 @@ struct rk_sema {
 #endif
 };
 
-void rk_sema_init(struct rk_sema *s, uint32_t value);
+void rk_sema_init(struct rk_sema *s, int value);
 void rk_sema_wait(struct rk_sema *s);
 void rk_sema_post(struct rk_sema *s);
