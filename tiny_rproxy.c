@@ -1,9 +1,10 @@
 #include "csapp.h"
 #include "helper.h"
 #include "sbuf.h"
+#include "thread_pool.h"
 
-#define NTHREADS 128
-#define SBUFSIZE 128
+#define NTHREADS 4
+#define SBUFSIZE 16
 #define BUFSIZE 1024
 #define MAXSTR 1024
 
@@ -11,6 +12,7 @@
 #define PROXY_HOSTNAME "localhost"
 #define PROXY_PORT "7000"
 
+void *handle_conn_pool(void *arg);
 void *handle_conn(void *vargp);
 void *handle_client_conn(void *vargp);
 void proxy(int);
@@ -25,7 +27,7 @@ sbuf_t s_buf;
 
 int main(int argc, char **argv) {
   int listenfd, connfd;
-  pthread_t tid;
+  // pthread_t tid;
   socklen_t clientlen;
   struct sockaddr_storage clientaddr;
   char client_hostname[MAXSTR], client_port[MAXSTR];
@@ -33,11 +35,15 @@ int main(int argc, char **argv) {
   listenfd = Open_listenfd(LISTEN_PORT);
   printf("listend at %s listenfd: %d\n", LISTEN_PORT, listenfd);
 
-  sbuf_init(&s_buf, SBUFSIZE);
+  // 初始化线程池
+  thread_pool_t tp;
+  thread_pool_init(&tp, 4, 128, handle_conn_pool);
 
-  for (int i = 0; i < NTHREADS; i++) {
-    Pthread_create(&tid, NULL, handle_conn, NULL);
-  }
+  // sbuf_init(&s_buf, SBUFSIZE);
+
+  // for (int i = 0; i < NTHREADS; i++) {
+  //   Pthread_create(&tid, NULL, handle_conn, NULL);
+  // }
 
   while (1) {
     clientlen = sizeof(struct sockaddr_storage);
@@ -46,8 +52,16 @@ int main(int argc, char **argv) {
                 client_port, MAXSTR, 0);
     printf("accept %s:%s connfd: %d\n", client_hostname, client_port, connfd);
 
-    sbuf_insert(&s_buf, connfd);
+    // sbuf_insert(&s_buf, connfd);
+    thread_pool_add(&tp, (void *)connfd);
   }
+}
+
+void *handle_conn_pool(void *arg) {
+  int connfd = (int)arg;
+  printf("thread get connfd: %d\n", connfd);
+  mult_proxy(connfd);
+  return NULL;
 }
 
 void *handle_conn(void *vargp) {
