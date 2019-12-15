@@ -3,10 +3,7 @@
 ## 编译
 
 ```shell
-# mac
-gcc -o tiny_rproxy.out *.c
-# ubuntu
-gcc -pthread -o tiny_rproxy.out *.c
+make
 
 # bench
 wrk2 -t2 -c100 -d10s -R2000 http://127.0.0.1:7000
