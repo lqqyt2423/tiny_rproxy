@@ -1,7 +1,7 @@
 #include "sbuf.h"
 
 void sbuf_init(sbuf_t *sp, int n) {
-  sp->buf = Calloc(n, sizeof(int));
+  sp->buf = Calloc(n, sizeof(void *));
   sp->n = n;
   sp->front = sp->rear = 0;
 
@@ -12,7 +12,7 @@ void sbuf_init(sbuf_t *sp, int n) {
 
 void sbuf_deinit(sbuf_t *sp) { Free(sp->buf); }
 
-void sbuf_insert(sbuf_t *sp, int item) {
+void sbuf_insert(sbuf_t *sp, void *item) {
   rk_sema_wait(&sp->slots);
   rk_sema_wait(&sp->mutex);
   sp->buf[(++sp->rear) % (sp->n)] = item;
@@ -20,8 +20,8 @@ void sbuf_insert(sbuf_t *sp, int item) {
   rk_sema_post(&sp->items);
 }
 
-int sbuf_remove(sbuf_t *sp) {
-  int item;
+void *sbuf_remove(sbuf_t *sp) {
+  void *item;
   rk_sema_wait(&sp->items);
   rk_sema_wait(&sp->mutex);
   item = sp->buf[(++sp->front) % (sp->n)];
