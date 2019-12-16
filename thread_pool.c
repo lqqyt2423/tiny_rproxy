@@ -20,12 +20,13 @@ void thread_pool_init(thread_pool_t *tp, int init_n, int max_n, int buf_n,
 
   int i;
   pthread_t tid;
-  Pthread_create(&tid, NULL, add_thread, (void *)tp);
   for (i = 0; i < tp->init_n; i++) {
     Pthread_create(&tid, NULL, init_single_thread, (void *)tp);
     tp->n++;
     tp->free_n++;
   }
+
+  Pthread_create(&tid, NULL, add_thread, (void *)tp);
 }
 
 void *thread_pool_add(thread_pool_t *tp, void *arg) {
