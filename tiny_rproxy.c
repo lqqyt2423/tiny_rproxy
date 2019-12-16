@@ -60,18 +60,22 @@ void mult_proxy(int connfd) {
       if ((n = Rio_read_one(connfd, buf, MAXBUF)) > 0) {
         Rio_writen(clientfd, buf, n);
       } else {
-        shutdown(connfd, SHUT_RD);
-        shutdown(clientfd, SHUT_WR);
         FD_CLR(connfd, &read_set);
+        // printf("Shutdown(connfd, SHUT_RD);\n");
+        // Shutdown(connfd, SHUT_RD);
+        printf("Shutdown(clientfd, SHUT_WR);\n");
+        Shutdown(clientfd, SHUT_WR);
       }
     }
     if (FD_ISSET(clientfd, &ready_set)) {
       if ((n = Rio_read_one(clientfd, buf, MAXBUF)) > 0) {
         Rio_writen(connfd, buf, n);
       } else {
-        shutdown(clientfd, SHUT_RD);
-        shutdown(connfd, SHUT_WR);
         FD_CLR(clientfd, &read_set);
+        // printf("Shutdown(clientfd, SHUT_RD);\n");
+        // Shutdown(clientfd, SHUT_RD);
+        printf("Shutdown(connfd, SHUT_WR);\n");
+        Shutdown(connfd, SHUT_WR);
       }
     }
   }

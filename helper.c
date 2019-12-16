@@ -28,3 +28,8 @@ ssize_t Rio_read_one(int fd, void *usrbuf, size_t n) {
     print_unix_error("Rio_read_one error");
   return nread;
 }
+
+void Shutdown(int fd, int s) {
+  int n;
+  if ((n = shutdown(fd, s)) < 0) print_unix_error("Shutdown error");
+}
