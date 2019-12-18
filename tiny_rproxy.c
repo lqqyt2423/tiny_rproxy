@@ -5,6 +5,7 @@ int main(int argc, char **argv) {
   socklen_t clientlen;
   struct sockaddr_storage clientaddr;
   char client_hostname[MAXSTR], client_port[MAXSTR];
+  int flags = NI_NUMERICHOST | NI_NUMERICSERV;
 
   listenfd = Open_listenfd(LISTEN_PORT);
   printf("listend at %s listenfd: %d\n", LISTEN_PORT, listenfd);
@@ -18,7 +19,7 @@ int main(int argc, char **argv) {
     clientlen = sizeof(struct sockaddr_storage);
     connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
     Getnameinfo((SA *)&clientaddr, clientlen, client_hostname, MAXSTR,
-                client_port, MAXSTR, 0);
+                client_port, MAXSTR, flags);
     printf("accept %s:%s connfd: %d\n", client_hostname, client_port, connfd);
     thread_pool_add(&tp, (void *)connfd);
   }
@@ -61,9 +62,6 @@ void mult_proxy(int connfd) {
         Rio_writen(clientfd, buf, n);
       } else {
         FD_CLR(connfd, &read_set);
-        // printf("Shutdown(connfd, SHUT_RD);\n");
-        // Shutdown(connfd, SHUT_RD);
-        printf("Shutdown(clientfd, SHUT_WR);\n");
         Shutdown(clientfd, SHUT_WR);
       }
     }
@@ -72,9 +70,6 @@ void mult_proxy(int connfd) {
         Rio_writen(connfd, buf, n);
       } else {
         FD_CLR(clientfd, &read_set);
-        // printf("Shutdown(clientfd, SHUT_RD);\n");
-        // Shutdown(clientfd, SHUT_RD);
-        printf("Shutdown(connfd, SHUT_WR);\n");
         Shutdown(connfd, SHUT_WR);
       }
     }
