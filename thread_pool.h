@@ -10,6 +10,7 @@ typedef struct {
   int max_n;              // 线程最大数量
   int free_n;             // 空闲的线程数量
   int n;                  // 当前线程数量
+  int is_manage;          // 是否正在管理线程中
   void *(*func)(void *);  // 线程运行时执行的函数指针
   pthread_mutex_t lock;   // 锁
   pthread_cond_t ready;   // 添加线程的条件变量

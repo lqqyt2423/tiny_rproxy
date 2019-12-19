@@ -6,7 +6,7 @@
 #include "sbuf.h"
 #include "thread_pool.h"
 
-#define INIT_THREAD 32
+#define INIT_THREAD 16
 #define MAX_THREAD 128
 #define THREAD_BUFSIZE 128
 #define BUFSIZE 1024
