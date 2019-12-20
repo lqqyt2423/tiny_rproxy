@@ -3,8 +3,19 @@ CC = gcc
 CFLAGS = -Og -Wall
 LDLIBS = -pthread
 
-tiny_rproxy: tiny_rproxy.c tiny_rproxy.h csapp.o helper.o sbuf.o sem.o thread_pool.o
-	$(CC) $(CFLAGS) $(LDLIBS) -o tiny_rproxy tiny_rproxy.c csapp.o helper.o sbuf.o sem.o thread_pool.o
+all: tiny_rproxy_mult.out tiny_rproxy_async.out
+
+tiny_rproxy_mult.out: tiny_rproxy.c tiny_rproxy.h tiny_rproxy_mult.o csapp.o helper.o sbuf.o sem.o thread_pool.o
+	$(CC) $(CFLAGS) $(LDLIBS) -o tiny_rproxy_mult.out tiny_rproxy.c tiny_rproxy_mult.o csapp.o helper.o sbuf.o sem.o thread_pool.o
+
+tiny_rproxy_async.out: tiny_rproxy.c tiny_rproxy.h tiny_rproxy_async.o csapp.o helper.o sbuf.o sem.o thread_pool.o
+	$(CC) $(CFLAGS) $(LDLIBS) -o tiny_rproxy_async.out tiny_rproxy.c tiny_rproxy_async.o csapp.o helper.o sbuf.o sem.o thread_pool.o
+
+tiny_rproxy_mult.o: tiny_rproxy_mult.c
+	$(CC) $(CFLAGS) -c tiny_rproxy_mult.c
+
+tiny_rproxy_async.o: tiny_rproxy_async.c
+	$(CC) $(CFLAGS) -c tiny_rproxy_async.c
 
 csapp.o: csapp.c csapp.h
 	$(CC) $(CFLAGS) -c csapp.c
@@ -22,4 +33,4 @@ thread_pool.o: thread_pool.c thread_pool.h csapp.c csapp.h
 	$(CC) $(CFLAGS) -c thread_pool.c
 
 clean:
-	rm tiny_rproxy *.o
+	rm *.out *.o
